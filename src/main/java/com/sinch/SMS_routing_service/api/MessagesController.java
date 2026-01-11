@@ -38,6 +38,8 @@ public class MessagesController {
     @PostMapping("/optout/{phoneNumber}")
     public OptOutResponse optOut(@PathVariable String phoneNumber) {
 
+        optOutService.add(phoneNumber);
+
         return new OptOutResponse(phoneNumber, "OK");
     }
 }

@@ -8,6 +8,7 @@ import com.sinch.SMS_routing_service.domain.message.model.Message;
 import com.sinch.SMS_routing_service.domain.message.repo.MessageRepository;
 import com.sinch.SMS_routing_service.domain.message.service.MessageService;
 import com.sinch.SMS_routing_service.domain.optout.service.OptOutService;
+import com.sinch.SMS_routing_service.exception.NotFoundException;
 import org.apache.logging.log4j.util.InternalException;
 import org.springframework.stereotype.Service;
 
@@ -48,7 +49,7 @@ public class SMSMessageServiceImpl implements MessageService {
     @Override
     public MessageStatusResponse getStatus(String id) {
         Message msg = messageRepo.findById(id)
-                .orElseThrow(() -> new InternalException("message not found: " + id));
+                .orElseThrow(() -> new NotFoundException("message not found: " + id));
         return new MessageStatusResponse(msg.getId(), msg.getStatus());
     }
 
