@@ -14,6 +14,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * Messages API Controller.
+ * Description:
+ *   Exposes HTTP endpoints for sending SMS messages, querying message status, and managing opt-out numbers.
+ * Author: Rason Sze
+ * Date: 2026-01-11
+ */
 @RestController
 public class MessagesController {
 
@@ -25,7 +32,21 @@ public class MessagesController {
         this.messageService = messageService;
         this.optOutService = optOutService;
     }
-
+    /**
+     * API: Send Message
+     * Endpoint:
+     *   POST /messages
+     * Description:
+     *   Submits a message for delivery. The service will decide routing and initial status.
+     * Request Body:
+     *   - destination_number: Destination phone number in simplified E.164 format.
+     *   - content: Message content.
+     *   - format: Message format. Currently supports SMS only.
+     * Response:
+     *   - id: Generated message id.
+     *   - status: Initial message status (e.g., PENDING or BLOCKED).
+     *   - carrier: Resolved carrier (e.g., TELSTRA/OPTUS/SPARK/GLOBAL/OPT_OUT).
+     */
     @PostMapping("/messages")
     public SendMessageResponse sendMessage(@Valid @RequestBody SendMessageRequest request) {
         log.info("POST /messages dest={} format={} contentLen={}",
@@ -34,21 +55,43 @@ public class MessagesController {
                 request.content().length());
 
         SendMessageResponse resp = messageService.send(request);
-
         log.info("POST /messages result id={} status={} carrier={}", resp.id(), resp.status(), resp.carrier());
         return resp;
     }
 
+    /**
+     * API: Get Message Status
+     * Endpoint:
+     *   GET /messages/{id}
+     * Description:
+     *   Retrieves the latest known status for a given message id.
+     * Path Variables:
+     *   - id: Message id.
+     * Response:
+     *   - id: Message id.
+     *   - status: Current message status.
+     *   - carrier: Carrier assigned to this message.
+     */
     @GetMapping("/messages/{id}")
     public MessageStatusResponse getMessageStatus(@PathVariable @NotBlank String id) {
         log.info("GET /messages/{}", id);
-
         MessageStatusResponse resp = messageService.getStatus(id);
-
         log.info("GET /messages/{} result status={} carrier={}", id, resp.status(), resp.carrier());
         return resp;
     }
 
+    /**
+     * API: Opt-out Phone Number
+     * Endpoint:
+     *   POST /optout/{phoneNumber}
+     * Description:
+     *   Adds the given phone number to the opt-out list.
+     * Path Variables:
+     *   - phoneNumber: Phone number in simplified E.164 format.
+     * Response:
+     *   - phoneNumber: The number that has been opted out.
+     *   - status: Operation result status (e.g., OK).
+     */
     @PostMapping("/optout/{phoneNumber}")
     public OptOutResponse optOut(@PathVariable
                                  @NotBlank(message="phoneNumber is required")

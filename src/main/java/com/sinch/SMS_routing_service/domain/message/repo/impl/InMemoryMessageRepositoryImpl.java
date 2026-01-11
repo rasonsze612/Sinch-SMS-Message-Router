@@ -39,6 +39,7 @@ public class InMemoryMessageRepositoryImpl implements MessageRepository {
     public void updateStatus(String messageId, MessageStatus newStatus) {
         if (messageId == null || messageId.isBlank()) throw new BadRequestException("message id is required");
         if (newStatus == null) throw new BadRequestException("newStatus is required");
+        // use computeIfPresent is for multi threads safety
         store.computeIfPresent(messageId, (k, msg) -> {
             msg.setStatus(newStatus);
             log.info("Message changed status messageId={} to={}", msg.getId(),newStatus);

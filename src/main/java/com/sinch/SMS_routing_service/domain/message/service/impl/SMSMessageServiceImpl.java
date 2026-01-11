@@ -30,6 +30,7 @@ public class SMSMessageServiceImpl implements MessageService {
     private final MessageRepository messageRepo;
 
     private final OptOutService optOutService;
+    /** Router service that selects the carrier and provides the corresponding client implementation. */
     private final CarrierRouterService carrierRouter;
     private static final Logger log = LoggerFactory.getLogger(SMSMessageServiceImpl.class);
 
@@ -41,6 +42,8 @@ public class SMSMessageServiceImpl implements MessageService {
 
     @Override
     public SendMessageResponse send(SendMessageRequest req) {
+        // message id generator,
+        // but it should be a distributed unique ID if in microservice env, like Snowflake ID
         String id = UUID.randomUUID().toString();
         log.info("message send service start id={} dest={} format={} contentLen={}",
                 id, req.destination_number(), req.format(),
@@ -56,8 +59,14 @@ public class SMSMessageServiceImpl implements MessageService {
         if (!"SMS".equalsIgnoreCase(req.format()))
             throw new BadRequestException("unsupported format: " + req.format());
 
+        // check if the number is OptOut
         boolean isOptOut = optOutService.checkNumberIsOptOut(req.destination_number());
+        // It will be set to Block status if it is OptOut number
+        // The message status is initialized to Pending when the message is created.
         MessageStatus status = isOptOut ? MessageStatus.BLOCKED : MessageStatus.PENDING;
+
+        // It will be set to OPT_OUT for message's carrier if number is OptOut
+        // Otherwise check the route to get the correct carrier by the phone number prefix
         Carrier carrier = isOptOut ? Carrier.OPT_OUT :
                 carrierRouter.route(req.destination_number());
         Message msg = new Message(
@@ -75,6 +84,7 @@ public class SMSMessageServiceImpl implements MessageService {
                 msg.getStatus(),
                 msg.getCarrier());
 
+        // the message status would be Block or Pending
         Message saveResult = messageRepo.save(msg);
         if(saveResult == null) {
             log.error("message save fail id={} dest={}", msg.getId(), msg.getDestinationNumber());
@@ -87,8 +97,11 @@ public class SMSMessageServiceImpl implements MessageService {
                 msg.getStatus(),
                 msg.getCarrier());
 
+        // send to carrier if status is not block
         if (MessageStatus.BLOCKED != status){
             log.info("message start to send SMS via carrier id={} dest={} carrier={}", msg.getId(), msg.getDestinationNumber(), msg.getCarrier());
+
+            // Get the correct carrier(Telstra/Optus, Spark, Global) client by the incoming message number
             CarrierClientService carrierClientService = carrierRouter.getCarrierClientService(carrier);
             boolean sendResult = carrierClientService.send(msg);
             if (sendResult){
