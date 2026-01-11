@@ -189,8 +189,9 @@ src/test/java/com/sinch/smsroutingservicedemo
 - Add an opt-out release API (remove number from opt-out list).
 - Capture opt-out reasons in the opt-out API.
 - Replace in-memory storage with a durable data store.
-- Add metrics, tracing, and structured audit logs for compliance.
 - Message ID should be distributed unique ID if in microservice env, like Snowflake ID
+- Unit Test should cover more scenarios
+- Add metrics, tracing, and structured audit logs for compliance.
 
 ## AI Assistance
 This project was built with AI assistance in the following areas:
