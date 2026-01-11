@@ -9,5 +9,5 @@ public interface MessageRepository {
 
     Message save(Message message);
     Optional<Message> findById(String id);
-    void updateStatus(String id, MessageStatus newStatus);
+    void updateStatus(String messageId, MessageStatus newStatus);
 }
