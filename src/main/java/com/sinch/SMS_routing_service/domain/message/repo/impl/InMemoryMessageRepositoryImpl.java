@@ -1,4 +1,4 @@
-package com.sinch.SMS_routing_service.domain.message.service.impl;
+package com.sinch.SMS_routing_service.domain.message.repo.impl;
 
 import com.sinch.SMS_routing_service.domain.message.enums.MessageStatus;
 import com.sinch.SMS_routing_service.domain.message.model.Message;

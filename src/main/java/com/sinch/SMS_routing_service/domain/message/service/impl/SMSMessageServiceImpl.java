@@ -4,6 +4,7 @@ import com.sinch.SMS_routing_service.api.dto.MessageStatusResponse;
 import com.sinch.SMS_routing_service.api.dto.SendMessageRequest;
 import com.sinch.SMS_routing_service.api.dto.SendMessageResponse;
 import com.sinch.SMS_routing_service.domain.carrier.enums.Carrier;
+import com.sinch.SMS_routing_service.domain.carrier.service.CarrierClientService;
 import com.sinch.SMS_routing_service.domain.carrier.service.CarrierRouterService;
 import com.sinch.SMS_routing_service.domain.message.enums.MessageStatus;
 import com.sinch.SMS_routing_service.domain.message.model.Message;
@@ -16,6 +17,9 @@ import org.apache.logging.log4j.util.InternalException;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class SMSMessageServiceImpl implements MessageService {
@@ -45,12 +49,27 @@ public class SMSMessageServiceImpl implements MessageService {
                 req.destination_number(),
                 req.content(),
                 req.format(),
-                status
+                status,
+                carrier
         );
 
         Message saveResult = messageRepo.save(msg);
         if(saveResult == null) {
             throw new SendMessageException("Message Save Fail");
+        }
+
+        if (MessageStatus.BLOCKED != status){
+            CarrierClientService carrierClientService = carrierRouter.getCarrierClientService(carrier);
+            boolean sendResult = carrierClientService.send(msg);
+            if (sendResult){
+                msg.setStatus(MessageStatus.SENT);
+                messageRepo.updateStatus(msg.getId(), MessageStatus.SENT);
+                // Simulate a delivery receipt update
+                // (in real systems, DELIVERED is typically set via carrier callback/webhook or polling).
+                DelayUpdateToDelivered(msg);
+            }else {
+                System.out.println("Send Message Fail");
+            }
         }
 
         return new SendMessageResponse(id, msg.getStatus(), carrier);
@@ -61,6 +80,11 @@ public class SMSMessageServiceImpl implements MessageService {
         Message msg = messageRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException("message not found: " + id));
         return new MessageStatusResponse(msg.getId(), msg.getStatus(), msg.getCarrier());
+    }
+
+    private void DelayUpdateToDelivered(Message msg) {
+        Executor delayed = CompletableFuture.delayedExecutor(2000, TimeUnit.MILLISECONDS);
+        CompletableFuture.runAsync(() -> messageRepo.updateStatus(msg.getId(),MessageStatus.DELIVERED), delayed);
     }
 
 }

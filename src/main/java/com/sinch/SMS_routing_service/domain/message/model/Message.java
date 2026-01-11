@@ -14,12 +14,13 @@ public class Message {
 
     private Carrier carrier;
 
-    public Message(String id, String destinationNumber, String content, String format, MessageStatus status) {
+    public Message(String id, String destinationNumber, String content, String format, MessageStatus status,Carrier carrier) {
         this.id = id;
         this.destinationNumber = destinationNumber;
         this.content = content;
         this.format = format;
         this.status = status;
+        this.carrier = carrier;
     }
 
     public String getId() {
