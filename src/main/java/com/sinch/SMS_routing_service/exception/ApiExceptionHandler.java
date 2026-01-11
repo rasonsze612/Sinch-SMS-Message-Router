@@ -27,4 +27,22 @@ public class ApiExceptionHandler {
                 ));
     }
 
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<Map<String, Object>> badRequest(BadRequestException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of(
+                        "code", "bad_request",
+                        "message", e.getMessage()
+                ));
+    }
+
+    @ExceptionHandler(SendMessageException.class)
+    public ResponseEntity<Map<String, Object>> carrierFailed(SendMessageException e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of(
+                        "code", "message_send_fail",
+                        "message", e.getMessage()
+                ));
+    }
+
 }

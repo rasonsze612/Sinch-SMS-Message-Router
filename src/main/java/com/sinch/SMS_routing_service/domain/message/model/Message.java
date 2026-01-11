@@ -1,5 +1,6 @@
 package com.sinch.SMS_routing_service.domain.message.model;
 
+import com.sinch.SMS_routing_service.domain.carrier.enums.Carrier;
 import com.sinch.SMS_routing_service.domain.message.enums.MessageStatus;
 
 public class Message {
@@ -9,6 +10,10 @@ public class Message {
     private String format;
     private MessageStatus status;
 
+
+
+    private Carrier carrier;
+
     public Message(String id, String destinationNumber, String content, String format, MessageStatus status) {
         this.id = id;
         this.destinationNumber = destinationNumber;
@@ -16,8 +21,6 @@ public class Message {
         this.format = format;
         this.status = status;
     }
-
-
 
     public String getId() {
         return id;
@@ -39,6 +42,10 @@ public class Message {
         return status;
     }
 
+    public Carrier getCarrier() {
+        return carrier;
+    }
+
     public void setId(String id) {
         this.id = id;
     }
@@ -57,6 +64,9 @@ public class Message {
 
     public void setStatus(MessageStatus status) {
         this.status = status;
+    }
+    public void setCarrier(Carrier carrier) {
+        this.carrier = carrier;
     }
 
 }
